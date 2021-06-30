@@ -1,0 +1,488 @@
+---
+include:
+  - docassemble.AssemblyLine:al_package.yml
+---
+metadata:
+  title: |
+    103 Petition for Divorce - No Children
+  short title: |
+    103 petiti103 Petition for Divorce - No Childrenon for divorce - no children
+  tags:
+    - FA-00-00-00-00
+---
+mandatory: True
+comment: |
+  This contains metadata that will not be overwritten if this YAML file is included in another
+  file. Each file gets its own key in the interview_metadata dictionary.
+  Most keys are not currently used at runtime, other than "allowed courts".
+code: |
+  interview_metadata
+  if not defined("interview_metadata['_Divorce_No_Children']"):
+    interview_metadata.initializeObject("_Divorce_No_Children")
+    interview_metadata["_Divorce_No_Children"].update({
+      "al_weaver_version": "1.0.2",
+      "generated on": "2021-06-07",
+      "title": "103 Petition for Divorce - No Children",
+      "short title": "103 petiti103 Petition for Divorce - No Childrenon for divorce - no children",
+      "description": "103 Petition for Divorce - No Children",
+      "original_form": "https://www.lsba.org/documents/ATJPublicResources/SRLDivorcePetitionNoMinorChildren.pdf",
+      "allowed courts": [
+        "Louisiana Judicial District Courts",
+      ],
+      "categories": [
+        "FA-00-00-00-00",
+      ],        
+      "logic block variable": "interview_order__Divorce_No_Children",
+      "attachment block variable": "_Divorce_No_Children_attachment",
+      "typical role": "plaintiff",
+    })
+---
+code: |
+  interview_short_title = "Ask the court for an Article 103 divorce"
+---
+code: |
+  al_form_type = 'starts_case'
+---
+objects:
+  - users: ALPeopleList.using(ask_number=True,target_number=1)
+---
+sections:
+  - review__Divorce_No_Children: Review your answers
+---
+#################### Interview order #####################
+comment: |
+  Controls order and branching logic for questions specific to this form
+id: interview_order__Divorce_No_Children
+code: |
+  # Set the allowed courts for this interview
+  allowed_courts = interview_metadata["_Divorce_No_Children"]["allowed courts"]
+  nav.set_section('review__Divorce_No_Children')
+  user_role = 'plaintiff'
+  Info_Required
+  both_live_in_louisiana
+  married_in_louisiana
+  marriage_date
+  user_domicile
+  filing_parish1
+  revert_to_maiden_name
+  maiden_name1
+  set_progress(14.29)
+  petitioners.gather()
+  respondents.gather()
+  petitioners.gather()
+  respondents.gather()
+  petitioners.gather()
+  set_progress(28.57)
+  petitioners[0].address.address
+  petitioners.gather()
+  respondents.gather()
+  petitioners.gather()
+  respondents.gather()
+  set_progress(42.86)
+  petitioners.gather()
+  respondents.gather()
+  petitioners.gather()
+  petitioners.gather()
+  respondents.gather()
+  set_progress(57.14)
+  petitioners.gather()
+  petitioners.gather()
+  respondents.gather()
+  petitioners.gather()
+  respondents.gather()
+  interview_order__Divorce_No_Children = True
+---
+###################### Main order ######################
+comment: |
+  This block includes the logic for standalone interviews.
+  Delete mandatory: True to include in another interview
+mandatory: True
+code: |
+  al_intro_screen
+  _Divorce_No_Children_intro
+  interview_order__Divorce_No_Children
+  signature_date
+  # Save anonymized interview statistics (customize the saved data below)
+  store_variables_snapshot(data={'zip': users[0].address.zip})
+  _Divorce_No_Children_preview_question
+  basic_questions_signature_flow
+  _Divorce_No_Children_download
+---
+comment: |
+  This question is used to introduce your interview. Please customize
+id: _Petition_for_Divorce__No_Children
+continue button field: _Divorce_No_Children_intro
+question: |
+  Petition for Article 103 Divorce (No Children)
+subquestion: |
+  This form builder helps you complete the paperwork required for a Louisiana Article 103 Divorce when the parties have no children.
+  
+  You should only use this form builder if:
+  
+    * You and your spouse were married in Louisiana, **and**
+    * You and your spouse both live in Louisiana, **and**
+    * You and your spouse do not have children together under age 18, **and**
+    * You and your spouse have been living separate and apart for at least 180 days.
+---
+id: Info_Required
+question: |
+  What do you need to get started?
+subquestion: | 
+  You need the following pieces of information to complete this form:
+  
+  * Date you were married
+  * Date you were separated
+  * An address where your spouse can be served (typically at home or work)
+
+continue button field: Info_Required
+---
+mandatory: True
+code:  |
+  if both_live_in_louisiana == 'No':
+    final_screen
+---
+id: Spouses live in Louisiana
+question: |
+  Do you and your spouse both live in Louisiana?
+yesno: both_live_in_louisiana
+---
+id: Spouses were married in Louisiana
+question: |
+  Were you and your spouse married in Louisiana?
+yesno: married_in_louisiana
+---
+id: Marriage Date
+question: |
+  About your marriage
+fields:
+  - "When did you and your spouse get married?": marriage_date
+    datatype: date
+  - "In what parish were you married?": marriage_parish
+    maxlength: 16
+  - "When did you and your spouse begin liivng separate and apart?": separation_date1
+    datatype: date
+---
+#code:  |
+ # marriage_day1 = marriage_date.month
+---
+id: About you and the other party
+question: |
+  About you and the other party
+fields:
+  - "In what parish do you currently live?": user_domicile
+    maxlength: 12
+  - "In what parish does the other party live?": respondent_domicile1
+    maxlength: 18
+  - "What is your telephone number?": petitioner_telephone
+    maxlength: 19
+  - "What is the other party's address? (e.g., 1234 Main Street, Vidalia, LA 71373)": respondent_address
+    maxlength: 66
+---
+id: Final details
+question: |
+  In what parish will you file your divorce?
+fields:
+  - "Parish": filing_parish1
+  - "Would you like to revert back to your maiden name?": revert_to_maiden_name
+    datatype: yesnoradio
+  - "What is your maiden name?": maiden_name1
+    show if: revert_to_maiden_name
+---
+sets:
+  - other_parties[i].name.first
+id: names of opposing parties
+question: |
+  % if users==plaintiffs:
+  Name of ${ ordinal(i) } **defendant** or respondent in this
+  matter
+  % else:
+  Name of ${ ordinal(i) } **plaintiff** or petitioner in this matter
+  % endif
+fields:
+  - code: |
+      other_parties[i].name_fields(person_or_business='person') 
+---
+id: preview _Divorce_No_Children
+question: |
+  Preview your form before you sign it
+subquestion: |
+  Here is a preview of the form you will sign on the next page.   
+  
+  ${ al_court_bundle.as_pdf(key='preview') }
+
+  Click the image to open it in a new tab. Click the "Make changes" button
+  to edit your answers.
+
+  ${ action_button_html(url_action('review__Divorce_No_Children'), label='Make changes', color='info') }
+  
+  Remember to come back to this window to continue and sign your form.
+continue button field: _Divorce_No_Children_preview_question    
+---
+code: |
+  signature_fields = []
+---
+id: Divorce No Children review screen
+event: review__Divorce_No_Children
+question: |
+  Review your answers
+review:
+  - Edit: filing_parish1
+    button: |
+      **In what parish will you file your divorce?**:
+      ${ filing_parish1 }
+  - Edit: user_domicile
+    button: |
+      **In what parish do you currently live?**:
+      ${ user_domicile }
+  - Edit: respondent_domicile1
+    button: |
+      **In what parish does the other party live?**:
+      ${ respondent_domicile1 }
+  - Edit: marriage_year1
+    button: |
+      **In what year were you and your spouse married?**:
+      ${ marriage_year1 }
+  - Edit: marriage_month1
+    button: |
+      **In what month were you married?**:
+      ${ marriage_month1 }
+  - Edit: marriage_day1
+    button: |
+      **On what day of the month were you married?**:
+      ${ marriage_day1 }
+  - Edit: marriage_parish
+    button: |
+      **In what parish were you married?**:
+      ${ marriage_parish }
+  - Edit: separation_day1
+    button: |
+      **On what day of the month did you separate from your spouse?**:
+      ${ separation_day1 }
+  - Edit: separation_month1
+    button: |
+      **In what month did you separate?**:
+      ${ separation_month1 }
+  - Edit: separation_year1
+    button: |
+      **In what year did you separate?**:
+      ${ separation_year1 }
+  - Edit: maiden_name1
+    button: |
+      **What is your maiden name?**:
+      ${ maiden_name1 }
+  - Edit: Signature1_es_signersignature
+    button: |
+      **Sign Here:**:
+      ${ Signature1_es_signersignature }
+  - Edit: petitioner_telephone
+    button: |
+      **What is your telephone number?**:
+      ${ petitioner_telephone }
+  - Edit: respondent_address
+    button: |
+      **What is the other party's address? (e.g., 1234 Main Street, Vidalia, LA 71373)**:
+      ${ respondent_address }
+  - Edit: petitioner_domicile
+    button: |
+      **In what parish do you currently live?**:
+      ${ petitioner_domicile }
+  - Edit: petitioners.revisit
+    button: |
+      **petitioners**
+
+      % for item in petitioners:
+        * ${ item }
+      % endfor
+  - Edit: respondents.revisit
+    button: |
+      **respondents**
+
+      % for item in respondents:
+        * ${ item }
+      % endfor
+---
+continue button field: petitioners.revisit
+question: |
+  Edit petitioners
+subquestion: |
+  ${ petitioners.table }
+
+  ${ petitioners.add_action() }
+---
+table: petitioners.table
+rows: petitioners
+columns:
+  - name: |
+      row_item.name.full() if defined("row_item.name.first") else ""
+  - address: |
+      row_item.address.block() if defined("row_item.address.address") else ""
+edit:
+  - name.first
+  - address.address
+confirm: True
+
+---
+continue button field: respondents.revisit
+question: |
+  Edit respondents
+subquestion: |
+  ${ respondents.table }
+
+  ${ respondents.add_action() }
+---
+table: respondents.table
+rows: respondents
+columns:
+  - name: |
+      row_item.name.full() if defined("row_item.name.first") else ""
+edit:
+  - name.first
+confirm: True
+
+---
+id: download _Divorce_No_Children
+event: _Divorce_No_Children_download
+question: |
+  Your form is ready to download.
+subquestion: |
+  Thank you ${users}. Your form is ready to download and deliver.
+  
+  View, download and send your form below. Click the "Make changes" button to fix any mistakes.
+
+  ${ action_button_html(url_action('review__Divorce_No_Children'), label='Make changes', color='info') }
+  
+  
+  ${ al_user_bundle.download_list_html() }
+  
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
+
+progress: 100
+---
+objects:
+  - Post_interview_instructions: ALDocument.using(title="Instructions", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
+  - _Divorce_No_Children_attachment: ALDocument.using(title="103 Petition for Divorce - No Children", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
+  - Post_interview_instructions: ALDocument.using(title="Instructions", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
+  - _Divorce_No_Children_attachment: ALDocument.using(title="103 Petition for Divorce - No Children", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
+---
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[Post_interview_instructions,_Divorce_No_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
+  - al_court_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
+---
+attachments:
+  - name:  Divorce No Children attachment
+    filename: _Divorce_No_Children     
+    variable name: _Divorce_No_Children_attachment[i]        
+    skip undefined: True
+    pdf template file: 103_Petition_for_Divorce_-_No_Children.pdf
+    fields:
+      - "petitioner1": ${ petitioners[0] }
+      - "respondent1": ${ respondents[0] }
+      - "petitioner2": ${ petitioners[0] }
+      - "respondent2": ${ respondents[0] }
+      - "petitioner3": ${ petitioners[0] }
+      - "petitioner_address_on_one_line": ${ petitioners[0].address.on_one_line() }
+      - "petitioner4": ${ petitioners[0] }
+      - "respondent3": ${ respondents[0] }
+      - "petitioner5": ${ petitioners[0] }
+      - "respondent4": ${ respondents[0] }
+      - "petitioner6": ${ petitioners[0] }
+      - "respondent5": ${ respondents[0] }
+      - "petitioner7": ${ petitioners[0] }
+      - "petitioner9": ${ petitioners[0] }
+      - "respondent6": ${ respondents[0] }
+      - "petitioner10": ${ petitioners[0] }
+      - "petitioner11": ${ petitioners[0] }
+      - "respondent7": ${ respondents[0] }
+      - "petitioner12": ${ petitioners[0] }
+      - "respondent8": ${ respondents[0] }
+      - "judicial_district1": ${ judicial_district1 }
+      - "filing_parish1": ${ filing_parish1 }
+      - "user_domicile": ${ user_domicile }
+      - "respondent_domicile1": ${ respondent_domicile1 }
+      - "marriage_year1": ${ marriage_year1 }
+      - "marriage_month1": ${ marriage_month1 }
+      - "marriage_day1": ${ marriage_day1 }
+      - "marriage_parish": ${ marriage_parish }
+      - "separation_day1": ${ separation_day1 }
+      - "separation_month1": ${ separation_month1 }
+      - "separation_year1": ${ separation_year1 }
+      - "maiden_name1": ${ maiden_name1 }
+      - "Signature1_es_:signer:signature": ${ Signature1_es_signersignature }
+      - "petitioner_telephone": ${ petitioner_telephone }
+      - "judicial_district2": ${ judicial_district1 }
+      - "filing_parish2": ${ filing_parish1 }
+      - "respondent_address": ${ respondent_address }
+      - "judicial_district3": ${ judicial_district1 }
+      - "filing_parish3": ${ filing_parish1 }
+      - "judicial_district4": ${ judicial_district1 }
+      - "filing_parish5": ${ filing_parish1 }
+      - "petitioner_domicile": ${ petitioner_domicile }
+      - "respondent_domicile2": ${ respondent_domicile1 }
+      - "marriage_month2": ${ marriage_month1 }
+      - "marriage_year2": ${ marriage_year1 }
+      - "marriage_day2": ${ marriage_day1 }
+      - "separation_month2": ${ separation_month1 }
+      - "separation_day2": ${ separation_day1 }
+      - "separation_year2": ${ separation_year1 }
+      - "judicial_district5": ${ judicial_district1 }
+      - "filing_parish6": ${ filing_parish1 }
+      - "maiden_name2": ${ maiden_name1 }
+  - name:  Divorce No Children attachment
+    filename: _Divorce_No_Children     
+    variable name: _Divorce_No_Children_attachment[i]        
+    skip undefined: True
+    pdf template file: 103_Petition_for_Divorce_-_No_Children.pdf
+    fields:
+      - "petitioner1": ${ petitioners[0] }
+      - "respondent1": ${ respondents[0] }
+      - "petitioner2": ${ petitioners[0] }
+      - "respondent2": ${ respondents[0] }
+      - "petitioner3": ${ petitioners[0] }
+      - "petitioner_address_on_one_line": ${ petitioners[0].address.on_one_line() }
+      - "petitioner4": ${ petitioners[0] }
+      - "respondent3": ${ respondents[0] }
+      - "petitioner5": ${ petitioners[0] }
+      - "respondent4": ${ respondents[0] }
+      - "petitioner6": ${ petitioners[0] }
+      - "respondent5": ${ respondents[0] }
+      - "petitioner7": ${ petitioners[0] }
+      - "petitioner9": ${ petitioners[0] }
+      - "respondent6": ${ respondents[0] }
+      - "petitioner10": ${ petitioners[0] }
+      - "petitioner11": ${ petitioners[0] }
+      - "respondent7": ${ respondents[0] }
+      - "petitioner12": ${ petitioners[0] }
+      - "respondent8": ${ respondents[0] }
+      - "judicial_district1": ${ judicial_district1 }
+      - "filing_parish1": ${ filing_parish1 }
+      - "user_domicile": ${ user_domicile }
+      - "respondent_domicile1": ${ respondent_domicile1 }
+      - "marriage_year1": ${ marriage_year1 }
+      - "marriage_month1": ${ marriage_month1 }
+      - "marriage_day1": ${ marriage_day1 }
+      - "marriage_parish": ${ marriage_parish }
+      - "separation_day1": ${ separation_day1 }
+      - "separation_month1": ${ separation_month1 }
+      - "separation_year1": ${ separation_year1 }
+      - "maiden_name1": ${ maiden_name1 }
+      - "Signature1_es_:signer:signature": ${ Signature1_es_signersignature }
+      - "petitioner_telephone": ${ petitioner_telephone }
+      - "judicial_district2": ${ judicial_district1 }
+      - "filing_parish2": ${ filing_parish1 }
+      - "respondent_address": ${ respondent_address }
+      - "judicial_district3": ${ judicial_district1 }
+      - "filing_parish3": ${ filing_parish1 }
+      - "judicial_district4": ${ judicial_district1 }
+      - "filing_parish5": ${ filing_parish1 }
+      - "petitioner_domicile": ${ petitioner_domicile }
+      - "respondent_domicile2": ${ respondent_domicile1 }
+      - "marriage_month2": ${ marriage_month1 }
+      - "marriage_year2": ${ marriage_year1 }
+      - "marriage_day2": ${ marriage_day1 }
+      - "separation_month2": ${ separation_month1 }
+      - "separation_day2": ${ separation_day1 }
+      - "separation_year2": ${ separation_year1 }
+      - "judicial_district5": ${ judicial_district1 }
+      - "filing_parish6": ${ filing_parish1 }
+      - "maiden_name2": ${ maiden_name1 }
