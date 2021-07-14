@@ -59,13 +59,16 @@ code: |
   nav.set_section('review__Divorce_No_Children')
   user_role = 'plaintiff'
   Info_Required
-  both_live_in_louisiana
-  married_in_louisiana
+  if both_live_in_louisiana:
+    married_in_louisiana
+    if married_in_louisiana:
+      marriage_date
+    else: final_screen
+  else: final_screen
   marriage_date
   user_domicile
   filing_parish1
   revert_to_maiden_name
-  maiden_name1
   set_progress(14.29)
   petitioners.gather()
   respondents.gather()
@@ -136,34 +139,38 @@ subquestion: |
 
 continue button field: Info_Required
 ---
-mandatory: True
-code:  |
-  if both_live_in_louisiana == 'No':
-    final_screen
----
-id: Spouses live in Louisiana
-question: |
-  Do you and your spouse both live in Louisiana?
-yesno: both_live_in_louisiana
----
 id: Spouses were married in Louisiana
 question: |
   Were you and your spouse married in Louisiana?
-yesno: married_in_louisiana
+fields:  
+  - "Were you and your spoues married in Louisiana?": married_in_louisiana
+    datatype: yesnoradio
+  - "Do you and your spouse both live in Louisiana?": both_live_in_louisiana
+    datatype: yesnoradio
+---
+mandatory: True
+event: final_screen
+code:  |
+  if both_live_in_louisiana == 'false':
+    final_screen
+---
+question: |
+  Sorry, you don't qualify to use this app.
+event: final_screen
 ---
 id: Marriage Date
 question: |
   About your marriage
 fields:
-  - "When did you and your spouse get married?": marriage_date
-    datatype: date
   - "In what parish were you married?": marriage_parish
     maxlength: 16
-  - "When did you and your spouse begin liivng separate and apart?": separation_date1
+  - "When did you and your spouse get married?": marriage_date
+    datatype: date
+  - "When did you and your spouse begin living separate and apart?": separation_date
     datatype: date
 ---
 #code:  |
- # marriage_day1 = marriage_date.month
+ # format_date('marriage_date', format='d'): marriage_day1
 ---
 id: About you and the other party
 question: |
@@ -180,9 +187,9 @@ fields:
 ---
 id: Final details
 question: |
-  In what parish will you file your divorce?
+  Final details
 fields:
-  - "Parish": filing_parish1
+  - "In what Parish will you file your divorce?": filing_parish1
   - "Would you like to revert back to your maiden name?": revert_to_maiden_name
     datatype: yesnoradio
   - "What is your maiden name?": maiden_name1
@@ -400,13 +407,13 @@ attachments:
       - "filing_parish1": ${ filing_parish1 }
       - "user_domicile": ${ user_domicile }
       - "respondent_domicile1": ${ respondent_domicile1 }
-      - "marriage_year1": ${ marriage_year1 }
-      - "marriage_month1": ${ marriage_month1 }
-      - "marriage_day1": ${ marriage_day1 }
+      - "marriage_year1": ${ marriage_date.year }
+      - "marriage_month1": ${ marriage_date.format("MMMM") }
+      - "marriage_day1": ${ ordinal_number(marriage_date.day) }
       - "marriage_parish": ${ marriage_parish }
-      - "separation_day1": ${ separation_day1 }
-      - "separation_month1": ${ separation_month1 }
-      - "separation_year1": ${ separation_year1 }
+      - "separation_day1": ${ ordinal_number(separation_date.day) }
+      - "separation_month1": ${ separation_date.format("MMMM") }
+      - "separation_year1": ${ separation_date.year }
       - "maiden_name1": ${ maiden_name1 }
       - "Signature1_es_:signer:signature": ${ Signature1_es_signersignature }
       - "petitioner_telephone": ${ petitioner_telephone }
@@ -417,72 +424,14 @@ attachments:
       - "filing_parish3": ${ filing_parish1 }
       - "judicial_district4": ${ judicial_district1 }
       - "filing_parish5": ${ filing_parish1 }
-      - "petitioner_domicile": ${ petitioner_domicile }
+      - "petitioner_domicile": ${ user_domicile }
       - "respondent_domicile2": ${ respondent_domicile1 }
-      - "marriage_month2": ${ marriage_month1 }
-      - "marriage_year2": ${ marriage_year1 }
-      - "marriage_day2": ${ marriage_day1 }
-      - "separation_month2": ${ separation_month1 }
-      - "separation_day2": ${ separation_day1 }
-      - "separation_year2": ${ separation_year1 }
-      - "judicial_district5": ${ judicial_district1 }
-      - "filing_parish6": ${ filing_parish1 }
-      - "maiden_name2": ${ maiden_name1 }
-  - name:  Divorce No Children attachment
-    filename: _Divorce_No_Children     
-    variable name: _Divorce_No_Children_attachment[i]        
-    skip undefined: True
-    pdf template file: 103_Petition_for_Divorce_-_No_Children.pdf
-    fields:
-      - "petitioner1": ${ petitioners[0] }
-      - "respondent1": ${ respondents[0] }
-      - "petitioner2": ${ petitioners[0] }
-      - "respondent2": ${ respondents[0] }
-      - "petitioner3": ${ petitioners[0] }
-      - "petitioner_address_on_one_line": ${ petitioners[0].address.on_one_line() }
-      - "petitioner4": ${ petitioners[0] }
-      - "respondent3": ${ respondents[0] }
-      - "petitioner5": ${ petitioners[0] }
-      - "respondent4": ${ respondents[0] }
-      - "petitioner6": ${ petitioners[0] }
-      - "respondent5": ${ respondents[0] }
-      - "petitioner7": ${ petitioners[0] }
-      - "petitioner9": ${ petitioners[0] }
-      - "respondent6": ${ respondents[0] }
-      - "petitioner10": ${ petitioners[0] }
-      - "petitioner11": ${ petitioners[0] }
-      - "respondent7": ${ respondents[0] }
-      - "petitioner12": ${ petitioners[0] }
-      - "respondent8": ${ respondents[0] }
-      - "judicial_district1": ${ judicial_district1 }
-      - "filing_parish1": ${ filing_parish1 }
-      - "user_domicile": ${ user_domicile }
-      - "respondent_domicile1": ${ respondent_domicile1 }
-      - "marriage_year1": ${ marriage_year1 }
-      - "marriage_month1": ${ marriage_month1 }
-      - "marriage_day1": ${ marriage_day1 }
-      - "marriage_parish": ${ marriage_parish }
-      - "separation_day1": ${ separation_day1 }
-      - "separation_month1": ${ separation_month1 }
-      - "separation_year1": ${ separation_year1 }
-      - "maiden_name1": ${ maiden_name1 }
-      - "Signature1_es_:signer:signature": ${ Signature1_es_signersignature }
-      - "petitioner_telephone": ${ petitioner_telephone }
-      - "judicial_district2": ${ judicial_district1 }
-      - "filing_parish2": ${ filing_parish1 }
-      - "respondent_address": ${ respondent_address }
-      - "judicial_district3": ${ judicial_district1 }
-      - "filing_parish3": ${ filing_parish1 }
-      - "judicial_district4": ${ judicial_district1 }
-      - "filing_parish5": ${ filing_parish1 }
-      - "petitioner_domicile": ${ petitioner_domicile }
-      - "respondent_domicile2": ${ respondent_domicile1 }
-      - "marriage_month2": ${ marriage_month1 }
-      - "marriage_year2": ${ marriage_year1 }
-      - "marriage_day2": ${ marriage_day1 }
-      - "separation_month2": ${ separation_month1 }
-      - "separation_day2": ${ separation_day1 }
-      - "separation_year2": ${ separation_year1 }
+      - "marriage_month2": ${ marriage_date.year }
+      - "marriage_year2": ${ marriage_date.format("MMMM") }
+      - "marriage_day2": ${ ordinal_number(marriage_date.day) }
+      - "separation_day2": ${ ordinal_number(separation_date.day) }
+      - "separation_month2": ${ separation_date.format("MMMM") }
+      - "separation_year2": ${ separation_date.year }
       - "judicial_district5": ${ judicial_district1 }
       - "filing_parish6": ${ filing_parish1 }
       - "maiden_name2": ${ maiden_name1 }
