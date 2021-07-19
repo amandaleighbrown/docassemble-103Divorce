@@ -6,7 +6,7 @@ metadata:
   title: |
     103 Petition for Divorce - No Children
   short title: |
-    103 petiti103 Petition for Divorce - No Childrenon for divorce - no children
+    103 Petition for Divorce - No Children
   tags:
     - FA-00-00-00-00
 ---
@@ -23,7 +23,7 @@ code: |
       "al_weaver_version": "1.0.2",
       "generated on": "2021-06-07",
       "title": "103 Petition for Divorce - No Children",
-      "short title": "103 petiti103 Petition for Divorce - No Childrenon for divorce - no children",
+      "short title": "103 Petition for Divorce - No Children",
       "description": "103 Petition for Divorce - No Children",
       "original_form": "https://www.lsba.org/documents/ATJPublicResources/SRLDivorcePetitionNoMinorChildren.pdf",
       "allowed courts": [
@@ -70,27 +70,6 @@ code: |
   filing_parish1
   revert_to_maiden_name
   set_progress(14.29)
-  petitioners.gather()
-  respondents.gather()
-  petitioners.gather()
-  respondents.gather()
-  petitioners.gather()
-  set_progress(28.57)
-  petitioners[0].address.address
-  petitioners.gather()
-  respondents.gather()
-  petitioners.gather()
-  respondents.gather()
-  set_progress(42.86)
-  petitioners.gather()
-  respondents.gather()
-  petitioners.gather()
-  petitioners.gather()
-  respondents.gather()
-  set_progress(57.14)
-  petitioners.gather()
-  petitioners.gather()
-  respondents.gather()
   petitioners.gather()
   respondents.gather()
   interview_order__Divorce_No_Children = True
@@ -185,6 +164,29 @@ fields:
   - "What is the other party's address? (e.g., 1234 Main Street, Vidalia, LA 71373)": respondent_address
     maxlength: 66
 ---
+id: your name
+sets:
+    - users[0].name.first
+    - users[0].name.last
+question:  |
+  About you
+fields:
+  - code: |
+      users[0].name_fields()
+---
+id: is there an opposing party?
+code: |
+  other_parties.there_are_any = "Yes"
+---
+sets:
+  - other_parties[i].name.first
+id: names of opposing parties
+question: |
+  About your spouse
+fields:
+  - code: |
+      other_parties[i].name_fields(person_or_business='person') 
+---
 id: Final details
 question: |
   Final details
@@ -194,20 +196,6 @@ fields:
     datatype: yesnoradio
   - "What is your maiden name?": maiden_name1
     show if: revert_to_maiden_name
----
-sets:
-  - other_parties[i].name.first
-id: names of opposing parties
-question: |
-  % if users==plaintiffs:
-  Name of ${ ordinal(i) } **defendant** or respondent in this
-  matter
-  % else:
-  Name of ${ ordinal(i) } **plaintiff** or petitioner in this matter
-  % endif
-fields:
-  - code: |
-      other_parties[i].name_fields(person_or_business='person') 
 ---
 id: preview _Divorce_No_Children
 question: |
@@ -229,6 +217,7 @@ code: |
   signature_fields = []
 ---
 id: Divorce No Children review screen
+skip undefined: True
 event: review__Divorce_No_Children
 question: |
   Review your answers
@@ -245,34 +234,18 @@ review:
     button: |
       **In what parish does the other party live?**:
       ${ respondent_domicile1 }
-  - Edit: marriage_year1
+  - Edit: marriage_date
     button: |
-      **In what year were you and your spouse married?**:
-      ${ marriage_year1 }
-  - Edit: marriage_month1
-    button: |
-      **In what month were you married?**:
-      ${ marriage_month1 }
-  - Edit: marriage_day1
-    button: |
-      **On what day of the month were you married?**:
-      ${ marriage_day1 }
+      **When were you and your spouse married?**:
+      ${ marriage_date }
   - Edit: marriage_parish
     button: |
       **In what parish were you married?**:
       ${ marriage_parish }
-  - Edit: separation_day1
+  - Edit: separation_date
     button: |
-      **On what day of the month did you separate from your spouse?**:
-      ${ separation_day1 }
-  - Edit: separation_month1
-    button: |
-      **In what month did you separate?**:
-      ${ separation_month1 }
-  - Edit: separation_year1
-    button: |
-      **In what year did you separate?**:
-      ${ separation_year1 }
+      **When did you separate from your spouse?**:
+      ${ separation_date }
   - Edit: maiden_name1
     button: |
       **What is your maiden name?**:
@@ -292,7 +265,7 @@ review:
   - Edit: petitioner_domicile
     button: |
       **In what parish do you currently live?**:
-      ${ petitioner_domicile }
+      ${ user_domicile }
   - Edit: petitioners.revisit
     button: |
       **petitioners**
@@ -367,13 +340,13 @@ subquestion: |
 progress: 100
 ---
 objects:
-  - Post_interview_instructions: ALDocument.using(title="Instructions", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
+  - Post_interview_instructions: ALStaticDocument.using(title="Instructions", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
   - _Divorce_No_Children_attachment: ALDocument.using(title="103 Petition for Divorce - No Children", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
-  - Post_interview_instructions: ALDocument.using(title="Instructions", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
-  - _Divorce_No_Children_attachment: ALDocument.using(title="103 Petition for Divorce - No Children", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
+#  - Post_interview_instructions: ALDocument.using(title="Instructions", #filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, #has_addendum=False)
+#  - _Divorce_No_Children_attachment: ALDocument.using(title="103 Petition for Divorce - No Children", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
 ---
 objects:
-  - al_user_bundle: ALDocumentBundle.using(elements=[Post_interview_instructions,_Divorce_No_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
+  - al_user_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
   - al_court_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
 ---
 attachments:
@@ -381,7 +354,7 @@ attachments:
     filename: _Divorce_No_Children     
     variable name: _Divorce_No_Children_attachment[i]        
     skip undefined: True
-    pdf template file: 103_Petition_for_Divorce_-_No_Children.pdf
+    pdf template file: Louisiana_103_Petition_for_Divorce_-_No_Children.pdf
     fields:
       - "petitioner1": ${ petitioners[0] }
       - "respondent1": ${ respondents[0] }
@@ -435,3 +408,4 @@ attachments:
       - "judicial_district5": ${ judicial_district1 }
       - "filing_parish6": ${ filing_parish1 }
       - "maiden_name2": ${ maiden_name1 }
+
