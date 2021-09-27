@@ -70,7 +70,6 @@ code: |
   else: final_screen
   petitioners.gather()
   users[0].address.address
-  #other_parties[i].name.first
   respondents.gather()
   respondents[0].address.address
   marriage_date
@@ -136,8 +135,6 @@ fields:
 ---
 question: | 
   Great! It looks like you qualify to use this form builder. 
-#subquestion: |
-#  Let's go ahead and get started. 
 continue button field: qualifies_to_continue
 ---
 mandatory: True
@@ -161,9 +158,6 @@ fields:
   - "In what parish did you and ${ respondents[0].name.first } last live together?": marital_domicile_parish
   - "When did you and ${ respondents[0].name.first } begin living separate and apart?": separation_date
     datatype: date
----
-#code:  |
- # format_date('marriage_date', format='d'): marriage_day1
 ---
 id: your name
 sets:
@@ -215,20 +209,6 @@ fields:
   - code: |
       other_parties[i].name_fields(person_or_business='person') 
 ---
-#id: any other opposing parties
-#question: |
-#  % if users==plaintiffs:
-#  Is there any other **defendant** or respondent in this
-#  matter?
-#  % else:
-#  Is there any other **plaintiff** or petitioner in this matter?
-#  % endif
-#yesno: other_parties.there_is_another  
-#---
-#code: |
-#  other_parties.there_is_another = "No"
-#
----
 code: |
   AL_DEFAULT_COUNTRY = "US"
   AL_DEFAULT_STATE = "Louisiana"
@@ -245,14 +225,6 @@ fields:
       other_parties[0].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE)
   - Parish: other_parties[0].address.county
 ---
-#question: |
-#  Can ${ respondents[0].name.first } be served at their home address?
-#subquestion: | 
-#  When you request
-#fields: 
-#  - no label: spouse_can_be_served_at_home
-
----
 mandatory: True
 sets: other_parties[0].address.county
 code: |
@@ -261,21 +233,6 @@ code: |
 code: |
   address.reset_geocoding()
   address.geocoding_reset = True
----
-#id: respondents address
-#sets:
-#  - respondents[0].address.address
-#  - respondents[0].address.city
-#  - respondents[0].address.county
-#  - respondents[0].address.zip
-#question: |
-#  What is ${ respondents[0].possessive('address') }?
-#subquestion: |
-#  Use an address were ${ respondents[0].name.first } can be physically served. This is typically done at home or at work.
-#fields:
-#  - code: |
-#      respondents[0].address_fields(country_code=AL_DEFAULT_COUNTRY, #default_state=AL_DEFAULT_STATE)
-#  - Parish: respondents[0].address.county
 ---
 id: Final details
 question: |
@@ -298,22 +255,6 @@ fields:
 ---
 code: |
   trial_court = court_list.as_court('trial_court', trial_court_index)
-#---
-#code: |
-#  today = as_datetime(' ${ today() }')
-#  separation = as_datetime(' ${ separation_date }')
-#  interval = date_difference(starting=today, ending=separation)
-#---
-#id: Wait to file
-#question: |
-#  A quick note
-#subquestion: |
-#People seeking this type of divorce in Louisiana must continue living separate and apart for 180 days without reconciling before filing their paperwork. 
-
-#You said that you and ${ respondents[0].name.first } separated on ${ separation_date }, which is only ${ interval.days } days. You will not be eligible to file these documents with the court until the full 180 days have passed.
-
-#fields:
-#  - no label: wait_to_file
 ---
 id: preview _Divorce_No_Children
 question: |
@@ -461,8 +402,6 @@ progress: 100
 objects:
   - Post_interview_instructions: ALStaticDocument.using(title="Instructions", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
   - _Divorce_No_Children_attachment: ALDocument.using(title="103 Petition for Divorce - No Children", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
-#  - Post_interview_instructions: ALDocument.using(title="Instructions", #filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, #has_addendum=False)
-#  - _Divorce_No_Children_attachment: ALDocument.using(title="103 Petition for Divorce - No Children", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
 ---
 objects:
   - al_user_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
