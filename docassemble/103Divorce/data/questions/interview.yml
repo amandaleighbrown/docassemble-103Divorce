@@ -1,6 +1,7 @@
 ---
 include:
   - docassemble.AssemblyLine:al_package.yml
+  - docassemble.ALGenericJurisdiction:custom_organization.yml
 ---
 metadata:
   title: |
@@ -45,6 +46,8 @@ code: |
 ---
 objects:
   - users: ALPeopleList.using(ask_number=True,target_number=1)
+  - court_list: ALCourtLoader.using(file_name='JDCs_by_Parish.csv')
+  - other_parties: ALPeopleList.using(ask_number=True,target_number=1)
 ---
 sections:
   - review__Divorce_No_Children: Review your answers
@@ -62,16 +65,17 @@ code: |
   if both_live_in_louisiana:
     married_in_louisiana
     if married_in_louisiana:
-      marriage_date
+        qualifies_to_continue
     else: final_screen
   else: final_screen
-  marriage_date
-  user_domicile
-  filing_parish1
-  revert_to_maiden_name
-  set_progress(14.29)
   petitioners.gather()
+  users[0].address.address
+  #other_parties[i].name.first
   respondents.gather()
+  respondents[0].address.address
+  marriage_date
+  set_progress(14.29)
+  trial_court_index
   interview_order__Divorce_No_Children = True
 ---
 ###################### Main order ######################
@@ -83,6 +87,7 @@ code: |
   al_intro_screen
   _Divorce_No_Children_intro
   interview_order__Divorce_No_Children
+  trial_court
   signature_date
   # Save anonymized interview statistics (customize the saved data below)
   store_variables_snapshot(data={'zip': users[0].address.zip})
@@ -99,12 +104,12 @@ question: |
 subquestion: |
   This form builder helps you complete the paperwork required for a Louisiana Article 103 Divorce when the parties have no children.
   
-  You should only use this form builder if:
+  **You should only use this form builder if:**
   
     * You and your spouse were married in Louisiana, **and**
     * You and your spouse both live in Louisiana, **and**
-    * You and your spouse do not have children together under age 18, **and**
-    * You and your spouse have been living separate and apart for at least 180 days.
+    * You and your spouse do not have children together under age 18 and are not currently pregnant, **and**
+    * You and your spouse have been living separate and apart for at least 180 days without getting back together (called "reconciling").
 ---
 id: Info_Required
 question: |
@@ -120,12 +125,20 @@ continue button field: Info_Required
 ---
 id: Spouses were married in Louisiana
 question: |
-  Were you and your spouse married in Louisiana?
+  First, let's make sure you qualify to use this form builder.
 fields:  
-  - "Were you and your spoues married in Louisiana?": married_in_louisiana
+  - "Were you and your spouse married in Louisiana?": married_in_louisiana
     datatype: yesnoradio
-  - "Do you and your spouse both live in Louisiana?": both_live_in_louisiana
+  - "Do both you and your spouse live in Louisiana?": both_live_in_louisiana
     datatype: yesnoradio
+  - "Do you and your spouse have children together under the age of 18, or are you pregnant?": has_minor_children
+    datatype: yesnoradio
+---
+question: | 
+  Great! It looks like you qualify to use this form builder. 
+#subquestion: |
+#  Let's go ahead and get started. 
+continue button field: qualifies_to_continue
 ---
 mandatory: True
 event: final_screen
@@ -139,40 +152,53 @@ event: final_screen
 ---
 id: Marriage Date
 question: |
-  About your marriage
+  About your marriage to ${ respondents[0] }
 fields:
-  - "In what parish were you married?": marriage_parish
+  - "When did you and ${ respondents[0].name.first } get married?": marriage_date
+    datatype: date  
+  - "In what parish did you and ${ respondents[0].name.first } get married?": marriage_parish
     maxlength: 16
-  - "When did you and your spouse get married?": marriage_date
-    datatype: date
-  - "When did you and your spouse begin living separate and apart?": separation_date
+  - "In what parish did you and ${ respondents[0].name.first } last live together?": marital_domicile_parish
+  - "When did you and ${ respondents[0].name.first } begin living separate and apart?": separation_date
     datatype: date
 ---
 #code:  |
  # format_date('marriage_date', format='d'): marriage_day1
----
-id: About you and the other party
-question: |
-  About you and the other party
-fields:
-  - "In what parish do you currently live?": user_domicile
-    maxlength: 12
-  - "In what parish does the other party live?": respondent_domicile1
-    maxlength: 18
-  - "What is your telephone number?": petitioner_telephone
-    maxlength: 19
-  - "What is the other party's address? (e.g., 1234 Main Street, Vidalia, LA 71373)": respondent_address
-    maxlength: 66
 ---
 id: your name
 sets:
     - users[0].name.first
     - users[0].name.last
 question:  |
-  About you
+  What is your name?
+subquestion: |
+  Do not use any nicknames, only your full legal name.
 fields:
   - code: |
       users[0].name_fields()
+---
+id: your address
+sets:
+  - users[0].address.address
+  - users[0].address.city
+  - users[0].address.county
+  - users[0].address.zip
+question: |
+  What is your address?
+subquestion: |
+  Use an address where you can be contacted.
+fields:
+  - code: |
+      users[0].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE)
+  - Parish: users[0].address.county
+---
+sets: users[0].address.county
+code: |
+  user[0].address.geocode()
+---
+code: |
+  address.reset_geocoding()
+  address.geocoding_reset = True
 ---
 id: is there an opposing party?
 code: |
@@ -182,20 +208,112 @@ sets:
   - other_parties[i].name.first
 id: names of opposing parties
 question: |
-  About your spouse
+  What is your spouse's name?
+subquestion: |
+  Do not use any nicknames, only your spouse's full legal name.
 fields:
   - code: |
       other_parties[i].name_fields(person_or_business='person') 
+---
+#id: any other opposing parties
+#question: |
+#  % if users==plaintiffs:
+#  Is there any other **defendant** or respondent in this
+#  matter?
+#  % else:
+#  Is there any other **plaintiff** or petitioner in this matter?
+#  % endif
+#yesno: other_parties.there_is_another  
+#---
+#code: |
+#  other_parties.there_is_another = "No"
+#
+---
+code: |
+  AL_DEFAULT_COUNTRY = "US"
+  AL_DEFAULT_STATE = "Louisiana"
+---
+sets:
+  - other_parties[0].address.address
+  - other_parties[0].address.city
+  - other_parties[0].address.zip
+id: persons address
+question: |
+  What is ${ other_parties[0].possessive('home address') }?
+fields:
+  - code: |
+      other_parties[0].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE)
+  - Parish: other_parties[0].address.county
+---
+#question: |
+#  Can ${ respondents[0].name.first } be served at their home address?
+#subquestion: | 
+#  When you request
+#fields: 
+#  - no label: spouse_can_be_served_at_home
+
+---
+mandatory: True
+sets: other_parties[0].address.county
+code: |
+  other_parties[0].address.geocode()
+---
+code: |
+  address.reset_geocoding()
+  address.geocoding_reset = True
+---
+#id: respondents address
+#sets:
+#  - respondents[0].address.address
+#  - respondents[0].address.city
+#  - respondents[0].address.county
+#  - respondents[0].address.zip
+#question: |
+#  What is ${ respondents[0].possessive('address') }?
+#subquestion: |
+#  Use an address were ${ respondents[0].name.first } can be physically served. This is typically done at home or at work.
+#fields:
+#  - code: |
+#      respondents[0].address_fields(country_code=AL_DEFAULT_COUNTRY, #default_state=AL_DEFAULT_STATE)
+#  - Parish: respondents[0].address.county
 ---
 id: Final details
 question: |
   Final details
 fields:
-  - "In what Parish will you file your divorce?": filing_parish1
-  - "Would you like to revert back to your maiden name?": revert_to_maiden_name
+  - "In what Parish will you file your divorce?": trial_court_index
+    code: |
+      court_list.filter_courts(None)
+    help: |
+      Filing your paperwork with the right court is important. These are the options for Louisiana residents filing for divorce:
+      1. Where you currently live (${ users[0].address.county });
+      2. Where your spouse currently lives (${ respondents[0].address.county }); 
+      3. Where you and your spouse last lived together (${ marital_domicile_parish }  Parish)
+  - "Are you a female spouse seeking to revert back to your maiden name?": revert_to_maiden_name
     datatype: yesnoradio
   - "What is your maiden name?": maiden_name1
     show if: revert_to_maiden_name
+  - "What is your telephone number? (format: (555) 555-5555)": petitioner_telephone
+    maxlength: 19
+---
+code: |
+  trial_court = court_list.as_court('trial_court', trial_court_index)
+#---
+#code: |
+#  today = as_datetime(' ${ today() }')
+#  separation = as_datetime(' ${ separation_date }')
+#  interval = date_difference(starting=today, ending=separation)
+#---
+#id: Wait to file
+#question: |
+#  A quick note
+#subquestion: |
+#People seeking this type of divorce in Louisiana must continue living separate and apart for 180 days without reconciling before filing their paperwork. 
+
+#You said that you and ${ respondents[0].name.first } separated on ${ separation_date }, which is only ${ interval.days } days. You will not be eligible to file these documents with the court until the full 180 days have passed.
+
+#fields:
+#  - no label: wait_to_file
 ---
 id: preview _Divorce_No_Children
 question: |
@@ -214,7 +332,7 @@ subquestion: |
 continue button field: _Divorce_No_Children_preview_question    
 ---
 code: |
-  signature_fields = []
+  signature_fields = ["users[0].signature"]
 ---
 id: Divorce No Children review screen
 skip undefined: True
@@ -225,11 +343,11 @@ review:
   - Edit: filing_parish1
     button: |
       **In what parish will you file your divorce?**:
-      ${ filing_parish1 }
+      ${ trial_court.name }
   - Edit: user_domicile
     button: |
       **In what parish do you currently live?**:
-      ${ user_domicile }
+      ${ users[0].address.county.replace(" Parish", "") }
   - Edit: respondent_domicile1
     button: |
       **In what parish does the other party live?**:
@@ -250,22 +368,23 @@ review:
     button: |
       **What is your maiden name?**:
       ${ maiden_name1 }
-  - Edit: Signature1_es_signersignature
+    show if: revert_to_maiden_name
+  - Edit: user_signature
     button: |
       **Sign Here:**:
-      ${ Signature1_es_signersignature }
+      ${ user_signature }
   - Edit: petitioner_telephone
     button: |
       **What is your telephone number?**:
       ${ petitioner_telephone }
   - Edit: respondent_address
     button: |
-      **What is the other party's address? (e.g., 1234 Main Street, Vidalia, LA 71373)**:
-      ${ respondent_address }
+      **What is the other party's address?**:
+      ${ respondents[0].address.on_one_line() }
   - Edit: petitioner_domicile
     button: |
       **In what parish do you currently live?**:
-      ${ user_domicile }
+      ${ users[0].address.county }
   - Edit: petitioners.revisit
     button: |
       **petitioners**
@@ -354,7 +473,7 @@ attachments:
     filename: _Divorce_No_Children     
     variable name: _Divorce_No_Children_attachment[i]        
     skip undefined: True
-    pdf template file: Louisiana_103_Petition_for_Divorce_-_No_Children.pdf
+    pdf template file: 103_Petition_for_Divorce_-_No_Children.pdf
     fields:
       - "petitioner1": ${ petitioners[0] }
       - "respondent1": ${ respondents[0] }
@@ -362,6 +481,8 @@ attachments:
       - "respondent2": ${ respondents[0] }
       - "petitioner3": ${ petitioners[0] }
       - "petitioner_address_on_one_line": ${ petitioners[0].address.on_one_line() }
+      - "petitioner_address_on_one_line2": ${ petitioners[0].address.on_one_line() }
+      - "respondent_address": ${ respondents[0].address.on_one_line() }
       - "petitioner4": ${ petitioners[0] }
       - "respondent3": ${ respondents[0] }
       - "petitioner5": ${ petitioners[0] }
@@ -375,37 +496,42 @@ attachments:
       - "petitioner11": ${ petitioners[0] }
       - "respondent7": ${ respondents[0] }
       - "petitioner12": ${ petitioners[0] }
+      - "petitioner13": ${ petitioners[0] }
       - "respondent8": ${ respondents[0] }
-      - "judicial_district1": ${ judicial_district1 }
-      - "filing_parish1": ${ filing_parish1 }
-      - "user_domicile": ${ user_domicile }
+      - "judicial_district1": ${ trial_court.judicial_district }
+      - "filing_parish1": ${ trial_court.name }
+      - "user_domicile": ${ users[0].address.county.replace(" Parish", "") }
       - "respondent_domicile1": ${ respondent_domicile1 }
       - "marriage_year1": ${ marriage_date.year }
       - "marriage_month1": ${ marriage_date.format("MMMM") }
-      - "marriage_day1": ${ ordinal_number(marriage_date.day) }
+      - "marriage_day1": ${ ordinal_number(marriage_date.day,use_word=False) }
       - "marriage_parish": ${ marriage_parish }
-      - "separation_day1": ${ ordinal_number(separation_date.day) }
+      - "separation_day1": ${ ordinal_number(separation_date.day,use_word=False) }
       - "separation_month1": ${ separation_date.format("MMMM") }
       - "separation_year1": ${ separation_date.year }
       - "maiden_name1": ${ maiden_name1 }
-      - "Signature1_es_:signer:signature": ${ Signature1_es_signersignature }
+      - "user_signature": ${ users[0].signature if i == 'final' else '' }
       - "petitioner_telephone": ${ petitioner_telephone }
-      - "judicial_district2": ${ judicial_district1 }
-      - "filing_parish2": ${ filing_parish1 }
-      - "respondent_address": ${ respondent_address }
-      - "judicial_district3": ${ judicial_district1 }
-      - "filing_parish3": ${ filing_parish1 }
-      - "judicial_district4": ${ judicial_district1 }
-      - "filing_parish5": ${ filing_parish1 }
-      - "petitioner_domicile": ${ user_domicile }
+      - "judicial_district2": ${ trial_court.judicial_district }
+      - "filing_parish2": ${ trial_court.name }
+      - "respondent_address": ${ respondents[0].address.on_one_line() }
+      - "judicial_district3": ${ trial_court.judicial_district }
+      - "filing_parish3": ${ trial_court.name }
+      - "judicial_district4": ${ trial_court.judicial_district }
+      - "filing_parish5": ${ trial_court.name }
+      - "petitioner_domicile": ${ users[0].address.county.replace(" Parish", "") }
       - "respondent_domicile2": ${ respondent_domicile1 }
-      - "marriage_month2": ${ marriage_date.year }
-      - "marriage_year2": ${ marriage_date.format("MMMM") }
-      - "marriage_day2": ${ ordinal_number(marriage_date.day) }
-      - "separation_day2": ${ ordinal_number(separation_date.day) }
+      - "marriage_month2": ${ marriage_date.format("MMMM") }
+      - "marriage_year2": ${ marriage_date.year }
+      - "marriage_day2": ${ ordinal_number(marriage_date.day,use_word=False) }
+      - "separation_day2": ${ ordinal_number(separation_date.day,use_word=False) }
       - "separation_month2": ${ separation_date.format("MMMM") }
       - "separation_year2": ${ separation_date.year }
-      - "judicial_district5": ${ judicial_district1 }
-      - "filing_parish6": ${ filing_parish1 }
+      - "judicial_district5": ${ trial_court.judicial_district }
+      - "filing_parish6": ${ trial_court.name }
       - "maiden_name2": ${ maiden_name1 }
+      - "respondent_domicile1": ${ respondents[0].address.county.replace(" Parish", "") }
+      - "respondent_domicile2": ${ respondents[0].address.county.replace(" Parish", "") }
+
+      
 
