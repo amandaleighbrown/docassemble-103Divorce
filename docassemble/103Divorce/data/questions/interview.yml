@@ -188,11 +188,7 @@ fields:
 ---
 sets: users[0].address.county
 code: |
-  user[0].address.geocode()
----
-code: |
-  address.reset_geocoding()
-  address.geocoding_reset = True
+  users[0].address.geocode()
 ---
 id: is there an opposing party?
 code: |
@@ -229,10 +225,6 @@ mandatory: True
 sets: other_parties[0].address.county
 code: |
   other_parties[0].address.geocode()
----
-code: |
-  address.reset_geocoding()
-  address.geocoding_reset = True
 ---
 id: Final details
 question: |
@@ -281,18 +273,18 @@ event: review__Divorce_No_Children
 question: |
   Review your answers
 review:
-  - Edit: filing_parish1
+  - Edit: trial_court.name
     button: |
       **In what parish will you file your divorce?**:
       ${ trial_court.name }
-  - Edit: user_domicile
+  - Edit: users[0].address.county
     button: |
       **In what parish do you currently live?**:
       ${ users[0].address.county.replace(" Parish", "") }
-  - Edit: respondent_domicile1
+  - Edit: respondents[0].address.county
     button: |
       **In what parish does the other party live?**:
-      ${ respondent_domicile1 }
+      ${ respondents[0].address.county.replace(" Parish", "") }
   - Edit: marriage_date
     button: |
       **When were you and your spouse married?**:
@@ -310,22 +302,22 @@ review:
       **What is your maiden name?**:
       ${ maiden_name1 }
     show if: revert_to_maiden_name
-  - Edit: user_signature
+  - Edit: users[0].signature
     button: |
       **Sign Here:**:
-      ${ user_signature }
+      ${ showifdef(users[0].signature) }
   - Edit: petitioner_telephone
     button: |
       **What is your telephone number?**:
       ${ petitioner_telephone }
-  - Edit: respondent_address
+  - Edit: respondents[0].address.address
     button: |
       **What is the other party's address?**:
       ${ respondents[0].address.on_one_line() }
-  - Edit: petitioner_domicile
+  - Edit: petitioners[0].address.county
     button: |
       **In what parish do you currently live?**:
-      ${ users[0].address.county }
+      ${ users[0].address.county.replace(" Parish", "") }
   - Edit: petitioners.revisit
     button: |
       **petitioners**
@@ -440,7 +432,7 @@ attachments:
       - "judicial_district1": ${ trial_court.judicial_district }
       - "filing_parish1": ${ trial_court.name }
       - "user_domicile": ${ users[0].address.county.replace(" Parish", "") }
-      - "respondent_domicile1": ${ respondent_domicile1 }
+      - "respondent_domicile1": ${ respondents[0].address.county.replace(" Parish", "") }
       - "marriage_year1": ${ marriage_date.year }
       - "marriage_month1": ${ marriage_date.format("MMMM") }
       - "marriage_day1": ${ ordinal_number(marriage_date.day,use_word=False) }
@@ -459,7 +451,7 @@ attachments:
       - "judicial_district4": ${ trial_court.judicial_district }
       - "filing_parish5": ${ trial_court.name }
       - "petitioner_domicile": ${ users[0].address.county.replace(" Parish", "") }
-      - "respondent_domicile2": ${ respondent_domicile1 }
+      - "respondent_domicile2": ${ respondents[0].address.county.replace(" Parish", "") }
       - "marriage_month2": ${ marriage_date.format("MMMM") }
       - "marriage_year2": ${ marriage_date.year }
       - "marriage_day2": ${ ordinal_number(marriage_date.day,use_word=False) }
