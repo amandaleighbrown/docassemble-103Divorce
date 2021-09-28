@@ -2,6 +2,7 @@
 include:
   - docassemble.AssemblyLine:al_package.yml
   - docassemble.ALGenericJurisdiction:custom_organization.yml
+  - docassemble.EFSPIntegration:efiling_integration.yml
 ---
 metadata:
   title: |
@@ -87,9 +88,13 @@ code: |
   _Divorce_No_Children_intro
   interview_order__Divorce_No_Children
   trial_court
+  can_check_efile
   signature_date
   # Save anonymized interview statistics (customize the saved data below)
   store_variables_snapshot(data={'zip': users[0].address.zip})
+  if can_check_efile:
+    users[0].email
+    ready_to_efile
   _Divorce_No_Children_preview_question
   basic_questions_signature_flow
   _Divorce_No_Children_download
@@ -272,6 +277,9 @@ skip undefined: True
 event: review__Divorce_No_Children
 question: |
   Review your answers
+  % if defined('efile') and efile:
+  ** WARNING**: your answers have already been e-filed. Changing these answers will not change your submitted answers.
+  % endif
 review:
   - Edit: trial_court.name
     button: |
@@ -383,6 +391,11 @@ subquestion: |
 
   ${ action_button_html(url_action('review__Divorce_No_Children'), label='Make changes', color='info') }
   
+  % if ready_to_efile and not (defined('efile') and efile):
+  Click the "E-file button below to e-file your form at ${ trial_court }.
+  
+  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-file', icon='file-export') }
+  % endif
   
   ${ al_user_bundle.download_list_html() }
   
