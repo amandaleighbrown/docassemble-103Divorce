@@ -157,7 +157,8 @@ question: |
   About your marriage to ${ respondents[0] }
 fields:
   - "When did you and ${ respondents[0].name.first } get married?": marriage_date
-    datatype: date  
+    datatype: date
+    max: ${ today() }
   - "In what parish did you and ${ respondents[0].name.first } get married?": marriage_parish
     maxlength: 16
   - "In what parish did you and ${ respondents[0].name.first } last live together?": marital_domicile_parish
