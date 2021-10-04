@@ -2,6 +2,7 @@
 include:
   - docassemble.AssemblyLine:al_package.yml
   - docassemble.ALGenericJurisdiction:custom_organization.yml
+  - docassemble.EFSPIntegration:efiling_integration.yml
 ---
 metadata:
   title: |
@@ -87,9 +88,13 @@ code: |
   _Divorce_No_Children_intro
   interview_order__Divorce_No_Children
   trial_court
+  can_check_efile
   signature_date
   # Save anonymized interview statistics (customize the saved data below)
   store_variables_snapshot(data={'zip': users[0].address.zip})
+  if can_check_efile:
+    users[0].email
+    ready_to_efile
   _Divorce_No_Children_preview_question
   basic_questions_signature_flow
   _Divorce_No_Children_download
@@ -188,11 +193,7 @@ fields:
 ---
 sets: users[0].address.county
 code: |
-  user[0].address.geocode()
----
-code: |
-  address.reset_geocoding()
-  address.geocoding_reset = True
+  users[0].address.geocode()
 ---
 id: is there an opposing party?
 code: |
@@ -229,10 +230,6 @@ mandatory: True
 sets: other_parties[0].address.county
 code: |
   other_parties[0].address.geocode()
----
-code: |
-  address.reset_geocoding()
-  address.geocoding_reset = True
 ---
 id: Final details
 question: |
@@ -280,19 +277,22 @@ skip undefined: True
 event: review__Divorce_No_Children
 question: |
   Review your answers
+  % if defined('efile') and efile:
+  ** WARNING**: your answers have already been e-filed. Changing these answers will not change your submitted answers.
+  % endif
 review:
-  - Edit: filing_parish1
+  - Edit: trial_court.name
     button: |
       **In what parish will you file your divorce?**:
       ${ trial_court.name }
-  - Edit: user_domicile
+  - Edit: users[0].address.county
     button: |
       **In what parish do you currently live?**:
       ${ users[0].address.county.replace(" Parish", "") }
-  - Edit: respondent_domicile1
+  - Edit: respondents[0].address.county
     button: |
       **In what parish does the other party live?**:
-      ${ respondent_domicile1 }
+      ${ respondents[0].address.county.replace(" Parish", "") }
   - Edit: marriage_date
     button: |
       **When were you and your spouse married?**:
@@ -310,22 +310,22 @@ review:
       **What is your maiden name?**:
       ${ maiden_name1 }
     show if: revert_to_maiden_name
-  - Edit: user_signature
+  - Edit: users[0].signature
     button: |
       **Sign Here:**:
-      ${ user_signature }
+      ${ showifdef(users[0].signature) }
   - Edit: petitioner_telephone
     button: |
       **What is your telephone number?**:
       ${ petitioner_telephone }
-  - Edit: respondent_address
+  - Edit: respondents[0].address.address
     button: |
       **What is the other party's address?**:
       ${ respondents[0].address.on_one_line() }
-  - Edit: petitioner_domicile
+  - Edit: petitioners[0].address.county
     button: |
       **In what parish do you currently live?**:
-      ${ users[0].address.county }
+      ${ users[0].address.county.replace(" Parish", "") }
   - Edit: petitioners.revisit
     button: |
       **petitioners**
@@ -391,6 +391,11 @@ subquestion: |
 
   ${ action_button_html(url_action('review__Divorce_No_Children'), label='Make changes', color='info') }
   
+  % if ready_to_efile and not (defined('efile') and efile):
+  Click the "E-file button below to e-file your form at ${ trial_court }.
+  
+  ${ action_button_html(url_ask([{'recompute': ['efile']}]), label='E-file', icon='file-export') }
+  % endif
   
   ${ al_user_bundle.download_list_html() }
   
@@ -440,7 +445,7 @@ attachments:
       - "judicial_district1": ${ trial_court.judicial_district }
       - "filing_parish1": ${ trial_court.name }
       - "user_domicile": ${ users[0].address.county.replace(" Parish", "") }
-      - "respondent_domicile1": ${ respondent_domicile1 }
+      - "respondent_domicile1": ${ respondents[0].address.county.replace(" Parish", "") }
       - "marriage_year1": ${ marriage_date.year }
       - "marriage_month1": ${ marriage_date.format("MMMM") }
       - "marriage_day1": ${ ordinal_number(marriage_date.day,use_word=False) }
@@ -459,7 +464,7 @@ attachments:
       - "judicial_district4": ${ trial_court.judicial_district }
       - "filing_parish5": ${ trial_court.name }
       - "petitioner_domicile": ${ users[0].address.county.replace(" Parish", "") }
-      - "respondent_domicile2": ${ respondent_domicile1 }
+      - "respondent_domicile2": ${ respondents[0].address.county.replace(" Parish", "") }
       - "marriage_month2": ${ marriage_date.format("MMMM") }
       - "marriage_year2": ${ marriage_date.year }
       - "marriage_day2": ${ ordinal_number(marriage_date.day,use_word=False) }
