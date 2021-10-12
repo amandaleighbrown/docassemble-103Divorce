@@ -45,6 +45,9 @@ code: |
 code: |
   al_form_type = 'starts_case'
 ---
+code: |
+  jurisdiction_id = 'louisiana'
+---
 objects:
   - users: ALPeopleList.using(ask_number=True,target_number=1)
   - court_list: ALCourtLoader.using(file_name='JDCs_by_Parish.csv')
@@ -94,6 +97,7 @@ code: |
   store_variables_snapshot(data={'zip': users[0].address.zip})
   if can_check_efile:
     users[0].email
+    lead_contact = users[0]
     ready_to_efile
   _Divorce_No_Children_preview_question
   basic_questions_signature_flow
