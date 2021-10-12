@@ -355,8 +355,8 @@ subquestion: |
 
   ${ petitioners.add_action() }
 ---
-table: petitioners.table
-rows: petitioners
+table: users.table
+rows: users 
 columns:
   - name: |
       row_item.name.full() if defined("row_item.name.first") else ""
@@ -376,8 +376,8 @@ subquestion: |
 
   ${ respondents.add_action() }
 ---
-table: respondents.table
-rows: respondents
+table: other_parties.table
+rows: other_parties 
 columns:
   - name: |
       row_item.name.full() if defined("row_item.name.first") else ""
