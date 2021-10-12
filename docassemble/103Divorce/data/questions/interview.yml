@@ -44,6 +44,7 @@ code: |
 ---
 code: |
   al_form_type = 'starts_case'
+  proxy_conn = ProxyConnection(credentials_code_block=None)
 ---
 code: |
   jurisdiction_id = 'louisiana'
