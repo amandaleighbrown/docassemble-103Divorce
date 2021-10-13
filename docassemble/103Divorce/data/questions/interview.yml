@@ -44,6 +44,7 @@ code: |
 ---
 code: |
   al_form_type = 'starts_case'
+  efile_author_mode = False
   proxy_conn = ProxyConnection(credentials_code_block=None)
 ---
 code: |
@@ -366,7 +367,6 @@ edit:
   - name.first
   - address.address
 confirm: True
-
 ---
 continue button field: respondents.revisit
 question: |
