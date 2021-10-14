@@ -44,6 +44,11 @@ code: |
 ---
 code: |
   al_form_type = 'starts_case'
+  efile_author_mode = False
+  proxy_conn = ProxyConnection(credentials_code_block=None)
+---
+code: |
+  jurisdiction_id = 'louisiana'
 ---
 objects:
   - users: ALPeopleList.using(ask_number=True,target_number=1)
@@ -94,6 +99,7 @@ code: |
   store_variables_snapshot(data={'zip': users[0].address.zip})
   if can_check_efile:
     users[0].email
+    lead_contact = users[0]
     ready_to_efile
   _Divorce_No_Children_preview_question
   basic_questions_signature_flow
@@ -157,7 +163,8 @@ question: |
   About your marriage to ${ respondents[0] }
 fields:
   - "When did you and ${ respondents[0].name.first } get married?": marriage_date
-    datatype: date  
+    datatype: date
+    max: ${ today() }
   - "In what parish did you and ${ respondents[0].name.first } get married?": marriage_parish
     maxlength: 16
   - "In what parish did you and ${ respondents[0].name.first } last live together?": marital_domicile_parish
@@ -349,8 +356,8 @@ subquestion: |
 
   ${ petitioners.add_action() }
 ---
-table: petitioners.table
-rows: petitioners
+table: users.table
+rows: users 
 columns:
   - name: |
       row_item.name.full() if defined("row_item.name.first") else ""
@@ -360,7 +367,6 @@ edit:
   - name.first
   - address.address
 confirm: True
-
 ---
 continue button field: respondents.revisit
 question: |
@@ -370,8 +376,8 @@ subquestion: |
 
   ${ respondents.add_action() }
 ---
-table: respondents.table
-rows: respondents
+table: other_parties.table
+rows: other_parties 
 columns:
   - name: |
       row_item.name.full() if defined("row_item.name.first") else ""
