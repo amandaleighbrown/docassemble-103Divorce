@@ -1,7 +1,7 @@
 ---
 include:
   - docassemble.AssemblyLine:al_package.yml
-  - docassemble.ALGenericJurisdiction:custom_organization.yml
+  - docassemble.ALLouisianaSC:custom_organization.yml
   - docassemble.EFSPIntegration:efiling_integration.yml
 ---
 metadata:
