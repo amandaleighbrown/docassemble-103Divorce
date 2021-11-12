@@ -1,9 +1,16 @@
+#commit notes: 
 ---
 include:
   - docassemble.AssemblyLine:al_package.yml
   - docassemble.ALLouisianaSC:custom_organization.yml
   - docassemble.EFSPIntegration:efiling_integration.yml
 ---
+#modules:
+#  - .progressivedisclosure
+#---
+#features:
+#  css: progressivedisclosure.css
+#---
 metadata:
   title: |
     103 Petition for Divorce - No Children
@@ -68,11 +75,9 @@ code: |
   nav.set_section('review__Divorce_No_Children')
   user_role = 'plaintiff'
   Info_Required
-  if both_live_in_louisiana:
-    married_in_louisiana
-    if married_in_louisiana:
-        qualifies_to_continue
-    else: final_screen
+  married_in_louisiana
+  if qualifies_to_continue:
+    qualifies_to_continue_screen
   else: final_screen
   petitioners.gather()
   users[0].address.address
@@ -120,6 +125,8 @@ subquestion: |
     * You and your spouse both live in Louisiana, **and**
     * You and your spouse do not have children together under age 18 and are not currently pregnant, **and**
     * You and your spouse have been living separate and apart for at least 180 days without getting back together (called "reconciling").
+    
+  **You cannot use these forms if your spouse is on active duty with the Armed Forces of the United States or any of its allies.**
 ---
 id: Info_Required
 question: |
@@ -129,11 +136,11 @@ subquestion: |
   
   * Date you were married
   * Date you were separated
-  * An address where your spouse can be served (typically at home or work)
+  * An address where your spouse can be served (typically at home or work, but we'll give you more information later that can help you choose.)
 
 continue button field: Info_Required
 ---
-id: Spouses were married in Louisiana
+id: Qualifying questions
 question: |
   First, let's make sure you qualify to use this form builder.
 fields:  
@@ -141,22 +148,10 @@ fields:
     datatype: yesnoradio
   - "Do both you and your spouse live in Louisiana?": both_live_in_louisiana
     datatype: yesnoradio
-  - "Do you and your spouse have children together under the age of 18, or are you pregnant?": has_minor_children
+  - "Do you have children under the age of 18 with your spouse, or are you/they currently pregnant?": has_minor_children
     datatype: yesnoradio
----
-question: | 
-  Great! It looks like you qualify to use this form builder. 
-continue button field: qualifies_to_continue
----
-mandatory: True
-event: final_screen
-code:  |
-  if both_live_in_louisiana == 'false':
-    final_screen
----
-question: |
-  Sorry, you don't qualify to use this app.
-event: final_screen
+  - "Is your spouse on active duty with the United States Armed Forces or any of its allies?": active_duty_spouse
+    datatype: yesnoradio
 ---
 id: Marriage Date
 question: |
@@ -166,10 +161,23 @@ fields:
     datatype: date
     max: ${ today() }
   - "In what parish did you and ${ respondents[0].name.first } get married?": marriage_parish
-    maxlength: 16
+    maxlength: 20
   - "In what parish did you and ${ respondents[0].name.first } last live together?": marital_domicile_parish
   - "When did you and ${ respondents[0].name.first } begin living separate and apart?": separation_date
     datatype: date
+---
+id: qualifies_to_continue
+code: |
+  qualifies_to_continue = married_in_louisiana and both_live_in_louisiana and has_minor_children != True and active_duty_spouse != True
+---
+id: Final Screen for Non-Qualifiers
+question: |
+  Sorry, you don't qualify to use this app. 
+event: final_screen
+---
+question: | 
+  Great! It looks like you qualify to use this form builder. 
+continue button field: qualifies_to_continue_screen
 ---
 id: your name
 sets:
@@ -225,13 +233,23 @@ sets:
   - other_parties[0].address.address
   - other_parties[0].address.city
   - other_parties[0].address.zip
-id: persons address
+id: service address
 question: |
-  What is ${ other_parties[0].possessive('home address') }?
+  Where will you have ${ other_parties[0].name.first } served?
+subquestion: |
+  ${ collapse_template(service_options_explanation) }
+  &nbsp;
 fields:
   - code: |
       other_parties[0].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE)
   - Parish: other_parties[0].address.county
+  - "Is this ${ other_parties[0].name.first }'s home address?": domiciliary_service
+    datatype: yesnoradio
+  - "What is ${ other_parties[0].name.first }'s home parish?": home_parish
+    show if: 
+      variable: domiciliary_service
+      is: False
+
 ---
 mandatory: True
 sets: other_parties[0].address.county
@@ -241,21 +259,55 @@ code: |
 id: Final details
 question: |
   Final details
+subquestion: |
+  ${ collapse_template(court_choices_explanation) }
+  &nbsp;
 fields:
   - "In what Parish will you file your divorce?": trial_court_index
     code: |
       court_list.filter_courts(None)
-    help: |
-      Filing your paperwork with the right court is important. These are the options for Louisiana residents filing for divorce:
-      1. Where you currently live (${ users[0].address.county });
-      2. Where your spouse currently lives (${ respondents[0].address.county }); 
-      3. Where you and your spouse last lived together (${ marital_domicile_parish }  Parish)
   - "Are you a female spouse seeking to revert back to your maiden name?": revert_to_maiden_name
     datatype: yesnoradio
   - "What is your maiden name?": maiden_name1
     show if: revert_to_maiden_name
   - "What is your telephone number? (format: (555) 555-5555)": petitioner_telephone
     maxlength: 19
+---
+template: court_choices_explanation
+subject: |
+  💡 What are my court options?
+content: | 
+  Filing your paperwork with the right court is important. These are your options:
+  
+      1. The parish where you currently live (${ users[0].address.county } )
+      2. The parish where ${ respondents[0].name.first } currently lives 
+      3. The parish where you and ${ respondents[0].name.first } last lived together (${ marital_domicile_parish } Parish) 
+---
+template: service_options_explanation
+subject: |
+  💡 What are my options for serving ${ respondents[0].name.first }?
+content: | 
+  There are two types of service: "personal service" and "domiciliary service." You can use either to serve divorce papers.
+  
+  For personal service, ${ respondents[0].name.first } needs to be directly handed the divorce papers. This can happen wherever they can be physically found, including home, work, or a friend's house.
+  
+  For domiciliary service, the divorce papers must be served to "a person of suitable age and discretion" wherever ${ respondents[0].name.first } considers "home."
+---
+template: change_maiden_name_clause_pleading
+content: |
+  % if revert_to_maiden_name:
+  Petitioner wishes to have her name confirmed as ${ MAIDEN_NAME1 }.
+  % else:
+  The petitioner does not require confirmation of a maiden name.
+  % endif
+---
+template: change_maiden_name_clause_judgment
+content: |
+  % if revert_to_maiden_name:
+  **IT IS FURTHER ORDERED, ADJUDGED, AND DECREED** that Petitioner's name is confirmed as %{ MAIDEN_NAME1 }, which is their maiden name.
+  % else:
+  ""
+  % endif
 ---
 code: |
   trial_court = court_list.as_court('trial_court', trial_court_index)
@@ -335,14 +387,14 @@ review:
       ${ users[0].address.county.replace(" Parish", "") }
   - Edit: petitioners.revisit
     button: |
-      **petitioners**
+      **Petitioners**
 
       % for item in petitioners:
         * ${ item }
       % endfor
   - Edit: respondents.revisit
     button: |
-      **respondents**
+      **Respondents**
 
       % for item in respondents:
         * ${ item }
@@ -411,7 +463,7 @@ subquestion: |
 progress: 100
 ---
 objects:
-  - Post_interview_instructions: ALStaticDocument.using(title="Instructions", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
+  - Post_interview_instructions: ALStaticDocument.using(title="Instructions", filename="Self-Represented_Litigant_Petition_for_Divorce_No_Minor_Children._1", enabled=True, has_addendum=False)
   - _Divorce_No_Children_attachment: ALDocument.using(title="103 Petition for Divorce - No Children", filename="103_Petition_for_Divorce_-_No_Children.pdf", enabled=True, has_addendum=False)
 ---
 objects:
@@ -423,7 +475,7 @@ attachments:
     filename: _Divorce_No_Children     
     variable name: _Divorce_No_Children_attachment[i]        
     skip undefined: True
-    pdf template file: 103_Petition_for_Divorce_-_No_Children.pdf
+    docx template file: Self-Represented_Litigant_Petition_for_Divorce_No_Minor_Children.docx
     fields:
       - "petitioner1": ${ petitioners[0] }
       - "respondent1": ${ respondents[0] }
@@ -459,7 +511,12 @@ attachments:
       - "separation_day1": ${ ordinal_number(separation_date.day,use_word=False) }
       - "separation_month1": ${ separation_date.format("MMMM") }
       - "separation_year1": ${ separation_date.year }
-      - "maiden_name1": ${ maiden_name1 }
+      - "maiden_name1": |
+          % if revert_to_maiden_name:
+          ${ maiden_name1 }
+          % else:
+          "NOT APPLICABLE"
+          % endif      
       - "user_signature": ${ users[0].signature if i == 'final' else '' }
       - "petitioner_telephone": ${ petitioner_telephone }
       - "judicial_district2": ${ trial_court.judicial_district }
@@ -479,9 +536,22 @@ attachments:
       - "separation_year2": ${ separation_date.year }
       - "judicial_district5": ${ trial_court.judicial_district }
       - "filing_parish6": ${ trial_court.name }
-      - "maiden_name2": ${ maiden_name1 }
-      - "respondent_domicile1": ${ respondents[0].address.county.replace(" Parish", "") }
-      - "respondent_domicile2": ${ respondents[0].address.county.replace(" Parish", "") }
-
-      
+      - "maiden_name2": |
+          % if revert_to_maiden_name:
+          ${ maiden_name1 }
+          % else:
+          "NOT APPLICABLE"
+          % endif
+      - "respondent_domicile1": |
+          % if domiciliary_service:
+          ${ respondents[0].address.county.replace(" Parish", "") }
+          % else: 
+          ${ home_parish }
+          % endif
+      - "respondent_domicile2": |
+          % if domiciliary_service:
+          ${ respondents[0].address.county.replace(" Parish", "") }
+          % else: 
+          ${ home_parish }
+          % endif
 
