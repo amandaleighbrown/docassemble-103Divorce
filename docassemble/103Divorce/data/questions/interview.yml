@@ -266,12 +266,13 @@ fields:
   - "In what Parish will you file your divorce?": trial_court_index
     code: |
       court_list.filter_courts(None)
-  - "Are you a female spouse seeking to revert back to your maiden name?": revert_to_maiden_name
+  - "Would you like to go back to a pre-marriage last name?": revert_to_maiden_name
     datatype: yesnoradio
-  - "What is your maiden name?": maiden_name1
+  - "What last name would you like to go back to?": maiden_name1
     show if: revert_to_maiden_name
   - "What is your telephone number? (format: (555) 555-5555)": petitioner_telephone
     maxlength: 19
+  - "What is your e-mail address?": petitioner_email
 ---
 template: court_choices_explanation
 subject: |
@@ -291,7 +292,7 @@ content: |
   
   For personal service, ${ respondents[0].name.first } needs to be directly handed the divorce papers. This can happen wherever they can be physically found, including home, work, or a friend's house.
   
-  For domiciliary service, the divorce papers must be served to "a person of suitable age and discretion" wherever ${ respondents[0].name.first } considers "home."
+  For domiciliary service, the divorce papers must be served to "a person of suitable age and discretion" wherever ${ respondents[0].name.first } considers "home." Someone like a spouse, parent, or even an older, teenaged child would be ok.
 ---
 template: change_maiden_name_clause_pleading
 content: |
@@ -377,6 +378,10 @@ review:
     button: |
       **What is your telephone number?**:
       ${ petitioner_telephone }
+  - Edit: petitioner_eamil
+    button: |
+      **What is your email address?**:
+      ${ petitioner_email }
   - Edit: respondents[0].address.address
     button: |
       **What is the other party's address?**:
@@ -519,6 +524,7 @@ attachments:
           % endif      
       - "user_signature": ${ users[0].signature if i == 'final' else '' }
       - "petitioner_telephone": ${ petitioner_telephone }
+      - "petitioner_email": ${ petitioner_email }
       - "judicial_district2": ${ trial_court.judicial_district }
       - "filing_parish2": ${ trial_court.name }
       - "respondent_address": ${ respondents[0].address.on_one_line() }

@@ -43,7 +43,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.103Divorce',
-      version='1.2',
+      version='1.3',
       description=(''),
       long_description='# docassemble.103Divorce\r\n\r\n\r\n\r\n## Author\r\n\r\namanda@lagniappelawlab.org\r\n\r\n',
       long_description_content_type='text/markdown',
