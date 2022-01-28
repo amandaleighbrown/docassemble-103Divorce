@@ -297,7 +297,7 @@ content: |
 template: change_maiden_name_clause_pleading
 content: |
   % if revert_to_maiden_name:
-  Petitioner wishes to have her name confirmed as ${ MAIDEN_NAME1 }.
+  Petitioner wishes to have her name confirmed as ${ maiden_name1 }.
   % else:
   The petitioner does not require confirmation of a maiden name.
   % endif
@@ -378,7 +378,7 @@ review:
     button: |
       **What is your telephone number?**:
       ${ petitioner_telephone }
-  - Edit: petitioner_eamil
+  - Edit: petitioner_email
     button: |
       **What is your email address?**:
       ${ petitioner_email }
