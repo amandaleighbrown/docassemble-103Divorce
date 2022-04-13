@@ -670,7 +670,7 @@ code: |
     _Divorce_With_Children_attachment.enabled = True
 ---
 objects:
-  - al_user_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment, _Divorce_With_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
+  - al_user_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment, _Divorce_With_Children_attachment, Post_interview_instructions], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
   - al_court_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment, _Divorce_With_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
 
 ---
