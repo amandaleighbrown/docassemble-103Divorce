@@ -657,10 +657,9 @@ progress: 100
 ---
 # Enabled=True was here
 objects:
-  - Post_interview_instructions: ALStaticDocument.using(title="Instructions", filename="103 Petition for Divorce - No Children", enabled=True, has_addendum=False)
+  - Post_interview_instructions: ALStaticDocument.using(title="Checklist", filename="Article_103_Divorce_Checklist.pdf", enabled=True, has_addendum=False)
   - _Divorce_No_Children_attachment: ALDocument.using(title="103 Petition for Divorce - No Children", filename="103_Petition_for_Divorce_-_No_Children.pdf", has_addendum=False)
   - _Divorce_With_Children_attachment: ALDocument.using(title="103 Petition for Divorce - With Children", filename="103_Petition_for_Divorce_-_With_Children.pdf", has_addendum=False)
-  - Article_103_Divorce_Checklist: ALDocument.using(title="Divorce Checklist", filename="Article_103_Divorce_Checklist.pdf", has_addendum=False, enabled=True)
 ---
 code: |
   if children.number() < 1: 
@@ -671,8 +670,8 @@ code: |
     _Divorce_With_Children_attachment.enabled = True
 ---
 objects:
-  - al_user_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment, _Divorce_With_Children_attachment, Article_103_Divorce_Checklist], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
-  - al_court_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment, _Divorce_With_Children_attachment, Article_103_Divorce_Checklist], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
+  - al_user_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment, _Divorce_With_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
+  - al_court_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment, _Divorce_With_Children_attachment], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
 
 ---
 attachments:
