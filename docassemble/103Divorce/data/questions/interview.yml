@@ -53,7 +53,7 @@ code: |
 code: |
   al_form_type = 'starts_case'
   efile_author_mode = False
-  proxy_conn = ProxyConnection(credentials_code_block=None)
+  proxy_conn = ProxyConnection(default_jurisdiction=jurisdiction_id, credentials_code_block=None)
 ---
 code: |
   jurisdiction_id = 'louisiana'
@@ -501,11 +501,18 @@ content: |
 code: |
   trial_court = court_list.as_court('trial_court', trial_court_index)
 ---
+depends on:
+  - trial_court
+code: |
+  court_id = convert_court_to_id(trial_court)
+  if court_id.endswith('parish'):
+    court_id = court_id[:-6].strip()
+---
 id: preview _Divorce_No_Children
 question: |
   Preview your form before you sign it
 subquestion: |
-  Here is a preview of the form you will sign on the next page.   
+  Here is a preview of the form you will sign on the next page.
   
   ${ al_court_bundle.as_pdf(key='preview') }
 
