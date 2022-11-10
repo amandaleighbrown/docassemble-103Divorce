@@ -8,5 +8,3 @@ Want to disable the tests? Want to learn more? See ALKiln's docs: https://suffol
 @divorce @start @fast
 Scenario: interview.yml runs
   Given I start the interview at "interview.yml"
-
-@divorce 
