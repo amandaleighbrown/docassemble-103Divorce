@@ -662,12 +662,12 @@ objects:
   - _Divorce_With_Children_attachment: ALDocument.using(title="103 Petition for Divorce - With Children", filename="103_Petition_for_Divorce_-_With_Children.pdf", has_addendum=False)
 ---
 code: |
-  if children.there_are_any == False: 
-    _Divorce_No_Children_attachment.enabled = True 
-    _Divorce_With_Children_attachment.enabled = False
-  else: 
+  if children.target_number > 0: 
     _Divorce_No_Children_attachment.enabled = False 
     _Divorce_With_Children_attachment.enabled = True
+  else: 
+    _Divorce_No_Children_attachment.enabled = True 
+    _Divorce_With_Children_attachment.enabled = False
 ---
 objects:
   - al_user_bundle: ALDocumentBundle.using(elements=[_Divorce_No_Children_attachment, _Divorce_With_Children_attachment, Post_interview_instructions], filename="_Divorce_No_Children_package.pdf", title="All forms to download for your records")
