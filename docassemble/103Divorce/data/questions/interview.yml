@@ -89,8 +89,10 @@ code: |
   marriage_date
   users[0].previous_address.address
   children.there_are_any
-  if children.there_are_any: 
+  if children.there_are_any:
     children.gather()
+  else:
+    children.gathered = True
   petitioner_wants_name_change
   respondents[0].address.address
   spouse_will_waive_service
@@ -230,45 +232,43 @@ fields:
 validation code: |
   if not children.there_are_any:
     children.target_number = 0
+---
+#id: children names without birthdate
+#sets:
+#  - children[0].name.first
+#  - children[0].name.last
+#  - children[0].name.middle
+#  - children[0].name.suffix
+#question: |
+#  % if hasattr(children, 'ask_number') and children.ask_number and children.target_number == 1:
+#  Child's name
+#  % else:
+#  Name of first child
+#  % endif
+#fields:
+#  - code: |
+#      children[0].name_fields()
 #---
-#code: |
-#  children[i].name.first
-#  children[i].birthdate
----
-id: children names and birthdate
-sets:
-  - children[0].name.first
-  - children[0].name.last
-  - children[0].name.middle
-  - children[0].name.suffix
-  - children[0].birthdate
-question: |
-  % if hasattr(children, 'ask_number') and children.ask_number and children.target_number == 1:
-  About your child
-  % else:
-  About your first child
-  % endif
-fields:
-  - code: |
-      children[0].name_fields()
-  - "Birthdate": children[0].birthdate
-    datatype: BirthDate
----
-id: children 
-sets:
-  - children[i].name.first
-  - children[i].name.last
-  - children[i].name.middle
-  - children[i].name.suffix
-  - children[i].birthdate
-question: |
-  About your ${ ordinal(i) } child
-fields:
-  - code: |
-      children[i].name_fields()
-  - "Birthdate": children[i].birthdate
-    datatype: BirthDate
----
+#generic object: ALIndividual
+#template: x.first_name_label
+#content: |
+#  First name
+#---
+#generic object: ALIndividual
+#template: x.middle_name_label
+#content: |
+#  Middle name
+#---
+#generic object: ALIndividual
+#template: x.last_name_label
+#content: |
+#  Last name
+#---
+#generic object: ALIndividual
+#template: x.suffix_label
+#content: |
+#  Suffix
+#---
 question: |
   Which of these is true? 
 subquestion: |
@@ -662,7 +662,7 @@ objects:
   - _Divorce_With_Children_attachment: ALDocument.using(title="103 Petition for Divorce - With Children", filename="103_Petition_for_Divorce_-_With_Children.pdf", has_addendum=False)
 ---
 code: |
-  if children.number() < 1: 
+  if children.there_are_any == False: 
     _Divorce_No_Children_attachment.enabled = True 
     _Divorce_With_Children_attachment.enabled = False
   else: 
@@ -748,9 +748,6 @@ attachments:
       - "separation_year2": ${ separation_date.year }
       - "judicial_district5": ${ trial_court.judicial_district }
       - "filing_parish6": ${ trial_court.name }
-      - "number_of_children": ${ children.target_number }
-      - "child_name": ${ children[0].name }
-      - "child_age": ${ children[0].age_in_years() }
       - "maiden_name2": |
           % if petitioner_wants_name_change:
           ${ petitioner_new_name }
